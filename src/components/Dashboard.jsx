@@ -106,8 +106,8 @@ const Dashboard = ({ setSigned }) => {
 
   return (
     <>
-      <div className="w-full max-w-xl min-w-fit">
-        <form className="bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4">
+      <div className="m-4 w-full max-w-3xl">
+        <form className="bg-white shadow-lg rounded px-8 pt-6 pb-8">
           <h1 className="text-2xl mb-4 font-bold">Dashboard</h1>
           <table className="min-w-full border text-center text-sm font-light dark:border-neutral-500">
             <tbody>
@@ -139,6 +139,10 @@ const Dashboard = ({ setSigned }) => {
                       protection={protection}
                       setProtection={setProtection}
                     />
+                    {/* <Test
+                      protection={protection}
+                      setProtection={setProtection}
+                    /> */}
                   </div>
                 </td>
               </tr>
@@ -232,26 +236,38 @@ const Dashboard = ({ setSigned }) => {
           {/* Status */}
           <div className="my-4 mx-4 text-lg">
             <div className="flex justify-start">
-              Is authorized: {localStorage.getItem('isAuthorized') === '1' ? 'true' : 'false'}
+              Is authorized: {
+                localStorage.getItem('isAuthorized') === '1'
+                  ? <span className="text-green-800 ml-1">true</span>
+                  : <span className="text-red-800 ml-1">false</span>
+              }
             </div>
             <div className="flex justify-between">
-              <span>Status: {switches.status ? 'true' : 'false'}</span>
-              <span><a className="text-blue-500 text-sm text-transform: uppercase cursor-pointer" onClick={handleSignout}>{switches.status ? 'Signout' : 'Re-signin'}</a></span>
+              <div>
+                Status: {
+                  switches.status
+                    ? <span className="text-green-800">true</span>
+                    : <span className="text-red-800">false</span>
+                }
+              </div>
+              <div>
+                <a className="text-blue-500 text-sm text-transform: uppercase cursor-pointer" onClick={handleSignout}>{switches.status ? 'Signout' : 'Re-signin'}</a>
+              </div>
             </div>
           </div>
 
           {/* File */}
-          <input type='file' id='file' ref={inputFile} onChange={onChangeFile} style={{ display: 'none' }} />
+          <input type='file' id='file' ref={inputFile} onChange={onChangeFile} className="hidden" />
         </form>
-
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            className: 'text-lg bg-orange-600 items-center text-white',
-            duration: 5000,
-          }}
-        />
       </div>
+
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: 'text-lg bg-orange-600 items-center text-white',
+          duration: 5000,
+        }}
+      />
     </>
   )
 }
