@@ -3,18 +3,29 @@ import { Buffer } from 'buffer'
 import { SocketContext } from '../context/socket'
 import iconCSV from '../assets/csv-file-icon.svg'
 import toast, { Toaster } from 'react-hot-toast'
-import GardenerOptions from "./GardenerOptions"
+import Options from "./Options"
+
+const INITIAL_ARGS = {
+  suddenSize: false,
+  noDump: false,
+  ethPump: false,
+  collectionPump: false,
+}
 
 const INITIAL_STATES = {
-  "isGardenerRunning": false,
-  "isGardenerPermission": false,
-  "isFarmorRunning": false,
-  "isFarmorPermission": false,
-  "isPurchaserRunning": false,
-  "isPurchaserPermission": false,
-  "isAcceptorRunnung": false,
-  "isAcceptorPermission": false,
-  "status": false
+  isGardenerRunning: false,
+  isGardenerPermission: false,
+  GardenerArg: INITIAL_ARGS,
+  isFarmorRunning: false,
+  isFarmorPermission: false,
+  FarmorArg: INITIAL_ARGS,
+  isPurchaserRunning: false,
+  isPurchaserPermission: false,
+  PurchaserArg: INITIAL_ARGS,
+  isAcceptorRunnung: false,
+  isAcceptorPermission: false,
+  AcceptorArg: INITIAL_ARGS,
+  status: false
 }
 
 const activeIcon = {
@@ -26,17 +37,34 @@ const Dashboard = ({ setSigned }) => {
   const [switches, setSwitches] = useState(INITIAL_STATES)
   const [file, setFile] = useState(null)
   const inputFile = useRef(null)
-  //const [aggressionLevel, setAggressionLevel] = useState('low')
-  const [protection, setProtection] = useState({
-    suddenSize: false,
-    noDump: false,
-    ethPump: false,
-    collectionPump: false,
-  })
+  //const [activeIconName, setActiveIconName] = useState(null)
+
+  function getArgs(moduleName) {
+    switch (moduleName) {
+      case "Gardener":
+        return switches.GardenerArg ?? INITIAL_ARGS
+      case "Farmor":
+        return switches.FarmorArg ?? INITIAL_ARGS
+      case "Purchaser":
+        return switches.PurchaserArg ?? INITIAL_ARGS
+      case "Acceptor":
+        return switches.AcceptorArg ?? INITIAL_ARGS
+      default:
+        return INITIAL_ARGS
+    }
+  }
 
   socket.on('message', data => {
     if (data.code === "3") {
-      setSwitches(JSON.parse(data.message))
+      const _switches = {}
+      const items = JSON.parse(data.message)
+      for (let item in items) {
+        typeof items[item] === "string"
+          ? _switches[item] = items[item] === "" ? INITIAL_ARGS : JSON.parse(items[item])
+          : _switches[item] = items[item]
+      }
+
+      setSwitches(_switches)
     }
   })
 
@@ -50,7 +78,7 @@ const Dashboard = ({ setSigned }) => {
   }, [])
 
   const handleChange = async (event) => {
-    let data = { code: '14', message: '' }
+    let data = { code: '14', message: event.target.name }
 
     if (event.target.checked) {
       if (!file) return toast('Please select a file')
@@ -58,25 +86,27 @@ const Dashboard = ({ setSigned }) => {
       data = {
         code: '13',
         message: {
-          moduleName: "Gardener",
+          moduleName: event.target.name,
           csvFile: file.toString('base64'),
-          jsonParams: { ...protection }
+          jsonParams: JSON.stringify({ ...getArgs(event.target.name) })
         }
       }
     }
 
     let _switches = { ...switches }
-    _switches[event.target.name] = event.target.checked
+    _switches[event.target.dataset.value] = event.target.checked
     setSwitches(_switches)
 
     socket.emit("message", data)
     setFile(null)
+    //setActiveIconName(null)
   }
 
-  const handleSelectFile = () => {
+  const handleSelectFile = (event) => {
     if (!switches.status) {
       return toast('Please connect to the server first')
     }
+    //setActiveIconName(event.target.name)
     inputFile.current.click()
   }
 
@@ -85,7 +115,6 @@ const Dashboard = ({ setSigned }) => {
     event.preventDefault()
 
     const fileReader = new FileReader()
-
     const file = event.target.files[0]
 
     if (file) {
@@ -118,7 +147,8 @@ const Dashboard = ({ setSigned }) => {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      name="isGardenerRunning"
+                      name="Gardener"
+                      data-value="isGardenerRunning"
                       className="sr-only peer"
                       checked={switches.isGardenerRunning}
                       onChange={handleChange}
@@ -129,20 +159,18 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" data-value="Gardener" onClick={handleSelectFile} className="cursor-pointer"
-                      style={file ? activeIcon : {}} />
+                    <img src={iconCSV} width={24} height={24} alt="" name="Gardener" onClick={handleSelectFile} className="cursor-pointer" />
+                    {/* style={activeIconName === 'Gardener' ? activeIcon : {}} */}
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    <GardenerOptions
-                      protection={protection}
-                      setProtection={setProtection}
+                    <Options
+                      switches={switches}
+                      setSwitches={setSwitches}
+                      getArgs={getArgs}
+                      moduleName="Gardener"
                     />
-                    {/* <Test
-                      protection={protection}
-                      setProtection={setProtection}
-                    /> */}
                   </div>
                 </td>
               </tr>
@@ -153,7 +181,8 @@ const Dashboard = ({ setSigned }) => {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      name="isFarmorRunning"
+                      name="Farmor"
+                      data-value="isFarmorRunning"
                       className="sr-only peer"
                       checked={switches.isFarmorRunning}
                       onChange={handleChange}
@@ -164,13 +193,17 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" data-value="Farmor" onClick={handleSelectFile} className="cursor-pointer" />
+                    <img src={iconCSV} width={24} height={24} alt="" name="Farmor" onClick={handleSelectFile} className="cursor-pointer" />
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    {/* <input onChange={handleTBA} type="checkbox" className="border-gray-300 rounded h-5 w-5" name="FarmorTBA" />
-                    <label className="inline-block pl-[0.5rem] hover:cursor-pointer">TBA</label> */}
+                    <Options
+                      switches={switches}
+                      setSwitches={setSwitches}
+                      getArgs={getArgs}
+                      moduleName="Farmor"
+                    />
                   </div>
                 </td>
               </tr>
@@ -181,7 +214,8 @@ const Dashboard = ({ setSigned }) => {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      name="isPurchaserRunning"
+                      name="Purchaser"
+                      data-value="isPurchaserRunning"
                       className="sr-only peer"
                       checked={switches.isPurchaserRunning}
                       onChange={handleChange}
@@ -197,8 +231,6 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    {/* <input onChange={handleTBA} type="checkbox" className="border-gray-300 rounded h-5 w-5" name="PurchaserTBA" />
-                    <label className="inline-block pl-[0.5rem] hover:cursor-pointer">TBA</label> */}
                   </div>
                 </td>
               </tr>
@@ -209,7 +241,8 @@ const Dashboard = ({ setSigned }) => {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      name="isAcceptorRunnung"
+                      name="Acceptor"
+                      data-value="isAcceptorRunnung"
                       className="sr-only peer"
                       checked={switches.isAcceptorRunnung}
                       onChange={handleChange}
@@ -225,8 +258,6 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    {/* <input onChange={handleTBA} type="checkbox" className="border-gray-300 rounded h-5 w-5" name="AcceptorTBA" />
-                    <label className="inline-block pl-[0.5rem] hover:cursor-pointer">TBA</label> */}
                   </div>
                 </td>
               </tr>

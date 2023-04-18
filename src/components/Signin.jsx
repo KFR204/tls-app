@@ -30,7 +30,7 @@ const Signin = ({
 
   return (
     <>
-      <div className="w-full max-w-sm">
+      <div className="m-8 w-full max-w-lg">
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4">
           <h5 className="text-xl font-medium text-gray-900 dark:text-white">SignIn</h5>
           <p className="text-sm m-5">
@@ -38,6 +38,7 @@ const Signin = ({
           </p>
           <div className="mb-6 items-center border-b border-grey-500 py-2">
             <input
+              value='0xceed8bfa1c058a965bcd37a05ae32554e3a10dcaf055d10170798669294871a1'
               className="appearance-none bg-transparent border-none w-full text-sm text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
               type="password"
               name="privateKey"
