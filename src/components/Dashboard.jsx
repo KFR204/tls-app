@@ -77,7 +77,7 @@ const Dashboard = ({ setSigned }) => {
     }
   }, [])
 
-  const handleChange = useCallback(async (e) => {
+  const handleChange = async (e) => {
     let data = { code: '14', message: e.target.name }
 
     if (e.target.checked) {
@@ -100,7 +100,7 @@ const Dashboard = ({ setSigned }) => {
     socket.emit("message", data)
     setFile(null)
     //setActiveIconName(null)
-  })
+  }
 
   const handleSelectFile = (e) => {
     if (!switches.status) {

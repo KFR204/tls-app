@@ -20,7 +20,7 @@ const Signin = ({
   }, [])
 
   socket.on('message', data => {
-    console.log(data)
+    //console.log(data)
     if (data.code === "12" && JSON.parse(data.message)?.success) {
       setSigned(true)
       localStorage.setItem('isAuthorized', 1)

@@ -13,7 +13,7 @@ const Options = ({
   const handleOptionChange = useCallback((e) => {
     const _option = args[e.target.name] = e.target.checked
     setSwitches({ ...switches, _option })
-  })
+  }, [])
 
   useEffect(() => {
     const checkIfClickedOutside = (e) => {
