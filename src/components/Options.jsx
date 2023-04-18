@@ -1,20 +1,19 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, memo, useCallback } from "react"
 
-
-export default function Options({
+const Options = ({
   switches = {},
   setSwitches = () => {},
   getArgs = () => {},
   moduleName = ''
-}) {
+}) => {
   const ref = useRef()
   const [open, setOpen] = useState(false)
   const args = getArgs(moduleName)
 
-  const handleOptionChange = (e) => {
+  const handleOptionChange = useCallback((e) => {
     const _option = args[e.target.name] = e.target.checked
     setSwitches({ ...switches, _option })
-  }
+  })
 
   useEffect(() => {
     const checkIfClickedOutside = (e) => {
@@ -41,27 +40,29 @@ export default function Options({
         <div className="px-2 font-semibold">Protection from</div>
         <hr />
         <div className="pt-4 px-2 group relative">
-          <input onChange={handleOptionChange} type="checkbox" name="suddenSize" checked={args.suddenSize} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500" />
+          <input onChange={handleOptionChange} type="checkbox" name="suddenSize" checked={args.suddenSize} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500 cursor-pointer" />
           <label className="ml-2 font-normal">Sudden size and bidders above decreasing</label>
-          <span class="absolute -top-8 left-8 scale-0 rounded bg-gray-800 p-2 text-xs text-white group-hover:scale-100">Sudden size and bidders <br /> above decreasing</span>
+          <span className="absolute -top-8 left-8 scale-0 rounded bg-gray-800 p-2 text-xs text-white group-hover:scale-100">Sudden size and bidders <br /> above decreasing</span>
         </div>
         <div className="pt-2 px-2 group relative">
-          <input onChange={handleOptionChange} type="checkbox" name="noDump" checked={args.noDump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500" />
+          <input onChange={handleOptionChange} type="checkbox" name="noDump" checked={args.noDump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500 cursor-pointer" />
           <label className="ml-2 font-normal">No dump for a long time</label>
-          <span class="absolute -top-6 left-8 scale-0 rounded bg-gray-800 p-2 text-xs text-white group-hover:scale-100">No dump for a long time</span>
+          <span className="absolute -top-6 left-8 scale-0 rounded bg-gray-800 p-2 text-xs text-white group-hover:scale-100">No dump for a long time</span>
         </div>
         <div className="pt-2 px-2">
-          <input onChange={handleOptionChange} type="checkbox" name="ethPump" checked={args.ethPump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500" />
+          <input onChange={handleOptionChange} type="checkbox" name="ethPump" checked={args.ethPump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500 cursor-pointer" />
           <label className="ml-2 font-normal" title="ETH 1h/24h pump">ETH 1h/24h pump</label>
         </div>
         <div className="pt-2 px-2">
-          <input onChange={handleOptionChange} type="checkbox" name="collectionPump" checked={args.collectionPump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500" />
+          <input onChange={handleOptionChange} type="checkbox" name="collectionPump" checked={args.collectionPump} className="enabled:hover:border-gray-400 disabled:opacity-75 checked:bg-blue-500 cursor-pointer" />
           <label className="ml-2 font-normal" title={`Collection\n 1D pump`}>Collection 1D pump</label>
         </div>
       </div>
     </div>
   )
 }
+
+export default memo(Options)
 
 {/* <div className="pt-2 px-2 font-semibold">Aggression level</div>
         <div className="py-1 px-2 flex justify-start" onChange={(e) => setAggressionLevel(e.target.value)}>

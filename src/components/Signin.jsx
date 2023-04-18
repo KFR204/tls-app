@@ -1,4 +1,4 @@
-import { useState, useContext, useCallback } from "react"
+import { useState, useContext, useCallback, memo } from "react"
 import { SocketContext } from '../context/socket'
 
 const Signin = ({
@@ -20,7 +20,7 @@ const Signin = ({
   }, [])
 
   socket.on('message', data => {
-    console.log(data, JSON.parse(data.message), JSON.parse(data.message)?.success)
+    console.log(data)
     if (data.code === "12" && JSON.parse(data.message)?.success) {
       setSigned(true)
       localStorage.setItem('isAuthorized', 1)
@@ -38,7 +38,6 @@ const Signin = ({
           </p>
           <div className="mb-6 items-center border-b border-grey-500 py-2">
             <input
-              value='0xceed8bfa1c058a965bcd37a05ae32554e3a10dcaf055d10170798669294871a1'
               className="appearance-none bg-transparent border-none w-full text-sm text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
               type="password"
               name="privateKey"
@@ -67,4 +66,4 @@ const Signin = ({
   )
 }
 
-export default Signin
+export default memo(Signin)

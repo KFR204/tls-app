@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useRef } from "react"
+import { useEffect, useState, useContext, useRef, memo, useCallback } from "react"
 import { Buffer } from 'buffer'
 import { SocketContext } from '../context/socket'
 import iconCSV from '../assets/csv-file-icon.svg'
@@ -77,49 +77,49 @@ const Dashboard = ({ setSigned }) => {
     }
   }, [])
 
-  const handleChange = async (event) => {
-    let data = { code: '14', message: event.target.name }
+  const handleChange = useCallback(async (e) => {
+    let data = { code: '14', message: e.target.name }
 
-    if (event.target.checked) {
+    if (e.target.checked) {
       if (!file) return toast('Please select a file')
 
       data = {
         code: '13',
         message: {
-          moduleName: event.target.name,
+          moduleName: e.target.name,
           csvFile: file.toString('base64'),
-          jsonParams: JSON.stringify({ ...getArgs(event.target.name) })
+          jsonParams: JSON.stringify({ ...getArgs(e.target.name) })
         }
       }
     }
 
     let _switches = { ...switches }
-    _switches[event.target.dataset.value] = event.target.checked
+    _switches[e.target.dataset.value] = e.target.checked
     setSwitches(_switches)
 
     socket.emit("message", data)
     setFile(null)
     //setActiveIconName(null)
-  }
+  })
 
-  const handleSelectFile = (event) => {
+  const handleSelectFile = (e) => {
     if (!switches.status) {
       return toast('Please connect to the server first')
     }
-    //setActiveIconName(event.target.name)
+    //setActiveIconName(e.target.name)
     inputFile.current.click()
   }
 
-  const onChangeFile = (event) => {
-    event.stopPropagation()
-    event.preventDefault()
+  const onChangeFile = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
 
     const fileReader = new FileReader()
-    const file = event.target.files[0]
+    const file = e.target.files[0]
 
     if (file) {
-      fileReader.onload = function (event) {
-        const csvOutput = event.target.result
+      fileReader.onload = function (e) {
+        const csvOutput = e.target.result
         setFile(new Buffer.from(csvOutput))
       }
 
@@ -128,9 +128,8 @@ const Dashboard = ({ setSigned }) => {
   }
 
   const handleSignout = () => {
-    setSigned(true)
+    setSigned(false)
     localStorage.clear()
-    location.reload()
   }
 
   return (
@@ -303,4 +302,4 @@ const Dashboard = ({ setSigned }) => {
   )
 }
 
-export default Dashboard
+export default memo(Dashboard)
