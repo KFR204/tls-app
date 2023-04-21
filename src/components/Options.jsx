@@ -7,7 +7,7 @@ const Options = ({
 }) => {
   const ref = useRef()
   const [open, setOpen] = useState(false)
-  const args = switches[moduleName+'Arg'] ?? {}
+  const args = switches[moduleName + 'Arg'] ?? {}
 
   const handleOptionChange = useCallback((e) => {
     const _option = args[e.target.name] = e.target.checked
@@ -29,13 +29,13 @@ const Options = ({
   }, [open])
 
   return (
-    <div className="inline-block relative" ref={ref}>
+    <div className="relative" ref={ref}>
       <div id="toggle" className="inline-flex cursor-pointer" onClick={() => setOpen(state => !state)}>
         <div className="text-blue-500 text-base font-normal">Options</div>
         <svg className="fill-blue-500 h-4 w-4 mt-1 ml-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
       </div>
 
-      <div id="hidden" className={`${open ? 'visible' : 'invisible'} px-4 py-6 absolute right-0 top-7 z-10 text-left text-base text-gray-700 bg-white border rounded border-gray-200 shadow-lg`}>
+      <div id="hidden" className={`${open ? 'visible' : 'invisible'} px-4 py-6 absolute -right-4 sm:right-0 top-7 z-10 text-left text-base text-gray-700 bg-white border rounded border-gray-200 shadow-lg`}>
         <div className="px-2 font-semibold">Protection from</div>
         <hr />
         <div className="pt-4 px-2 group relative">

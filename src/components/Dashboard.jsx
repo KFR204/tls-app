@@ -1,10 +1,10 @@
 import { useEffect, useState, useContext, useRef, memo } from "react"
 import { Buffer } from 'buffer'
+import papa from 'papaparse'
+
 import { SocketContext } from '../context/socket'
 import iconCSV from '../assets/csv-file-icon.svg'
 import Options from "./Options"
-
-import papa from 'papaparse'
 
 const INITIAL_ARGS = {
   suddenSize: false,
@@ -167,9 +167,9 @@ const Dashboard = ({ setSigned }) => {
           </div>
         <form className="bg-white shadow-lg rounded sm:px-8 px-4 pt-6 pb-8">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <h2 className="text-sm">{walletAddress}</h2>
+          <h2 className="text-sm truncate">{walletAddress}</h2>
 
-          <table className="min-w-full mt-4 border text-center text-sm font-light dark:border-neutral-500">
+          <table className="table-fixed min-w-full mt-4 border text-center text-sm font-light dark:border-neutral-500">
             <tbody>
               {/* Gardener  */}
               <tr className="border-b dark:border-neutral-500">
@@ -188,7 +188,7 @@ const Dashboard = ({ setSigned }) => {
                     <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   </label>
                 </td>
-                <td className="whitespace-nowrap min-w-20 border-r px-4 py-2 dark:border-neutral-500">
+                <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500" style={{minWidth: '60px'}}>
                   <div className="flex justify-center">
                     <button onClick={handleSelectFile} disabled={!switches.isGardenerPermission} className={`${switches.isGardenerPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
                       <img src={iconCSV} width={24} height={24} alt="" name="Gardener" style={file && module === 'Gardener' ? activeIcon : {}} />
