@@ -5,6 +5,8 @@ import iconCSV from '../assets/csv-file-icon.svg'
 import toast, { Toaster } from 'react-hot-toast'
 import Options from "./Options"
 
+import papa from 'papaparse'
+
 const INITIAL_ARGS = {
   suddenSize: false,
   noDump: false,
@@ -35,24 +37,13 @@ const activeIcon = {
 const Dashboard = ({ setSigned }) => {
   const socket = useContext(SocketContext)
   const [switches, setSwitches] = useState(INITIAL_STATES)
+  const [module, setModule] = useState(null)
   const [file, setFile] = useState(null)
   const inputFile = useRef(null)
-  //const [activeIconName, setActiveIconName] = useState(null)
 
-  function getArgs(moduleName) {
-    switch (moduleName) {
-      case "Gardener":
-        return switches.GardenerArg ?? INITIAL_ARGS
-      case "Farmor":
-        return switches.FarmorArg ?? INITIAL_ARGS
-      case "Purchaser":
-        return switches.PurchaserArg ?? INITIAL_ARGS
-      case "Acceptor":
-        return switches.AcceptorArg ?? INITIAL_ARGS
-      default:
-        return INITIAL_ARGS
-    }
-  }
+  const walletAddress = '0xceed8bfa1c058a965bc...example...055d10170798669294871a3'
+
+  const getArgs = (moduleName) => switches[moduleName + 'Arg'] ?? INITIAL_ARGS
 
   socket.on('message', data => {
     if (data.code === "3") {
@@ -81,7 +72,7 @@ const Dashboard = ({ setSigned }) => {
     let data = { code: '14', message: e.target.name }
 
     if (e.target.checked) {
-      if (!file) return toast('Please select a file')
+      if (!file || e.target.name !== module) return toast('Please select a file')
 
       data = {
         code: '13',
@@ -98,15 +89,19 @@ const Dashboard = ({ setSigned }) => {
     setSwitches(_switches)
 
     socket.emit("message", data)
-    setFile(null)
-    //setActiveIconName(null)
   }
 
   const handleSelectFile = (e) => {
+    e.preventDefault()
+
     if (!switches.status) {
       return toast('Please connect to the server first')
     }
-    //setActiveIconName(e.target.name)
+
+    setFile(null)
+    setModule(e.target.name)
+
+    inputFile.current.value = ''
     inputFile.current.click()
   }
 
@@ -115,12 +110,35 @@ const Dashboard = ({ setSigned }) => {
     e.preventDefault()
 
     const fileReader = new FileReader()
-    const file = e.target.files[0]
+    const files = e.target.files
+    if (files.length === 0) return
+
+    const file = files[0]
 
     if (file) {
       fileReader.onload = function (e) {
-        const csvOutput = e.target.result
-        setFile(new Buffer.from(csvOutput))
+        let allKeyPresent = false
+
+        papa.parse(file, {
+            worker: true,
+            header:true,                
+            skipEmptyLines:true,
+            step: function(row, parser) {
+              if (!allKeyPresent) {
+                  const keys = Object.keys(row.data)
+                  if(!keys.includes('Collection')) parser.abort()
+
+                  allKeyPresent = true
+              }
+            },
+            complete: function(results) {
+                //console.log('parsing complete read', results)
+                if(!allKeyPresent) return
+
+                const csvOutput = e.target.result
+                setFile(new Buffer.from(csvOutput))
+            }
+        })
       }
 
       fileReader.readAsText(file)
@@ -135,15 +153,16 @@ const Dashboard = ({ setSigned }) => {
   return (
     <>
       <div className="m-4 w-full max-w-3xl">
-        <form className="bg-white shadow-lg rounded px-8 pt-6 pb-8">
-          <h1 className="text-2xl mb-4 font-bold">Dashboard</h1>
+        <form className="bg-white shadow-lg rounded sm:px-8 px-4 pt-6 pb-8">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h2 className="text-sm mb-4">{walletAddress}</h2>
           <table className="min-w-full border text-center text-sm font-light dark:border-neutral-500">
             <tbody>
               {/* Gardener  */}
               <tr className="border-b dark:border-neutral-500">
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500 font-medium text-xl text-left flex flex-row justify-between items-center">
                   <span>Gardener</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className={`relative inline-flex items-center ${switches.isGardenerPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
                     <input
                       type="checkbox"
                       name="Gardener"
@@ -156,10 +175,11 @@ const Dashboard = ({ setSigned }) => {
                     <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                   </label>
                 </td>
-                <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
+                <td className="whitespace-nowrap min-w-20 border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" name="Gardener" onClick={handleSelectFile} className="cursor-pointer" />
-                    {/* style={activeIconName === 'Gardener' ? activeIcon : {}} */}
+                    <button onClick={handleSelectFile} disabled={!switches.isGardenerPermission} className={`${switches.isGardenerPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
+                      <img src={iconCSV} width={24} height={24} alt="" name="Gardener" style={file && module === 'Gardener' ? activeIcon : {}} />
+                    </button>
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
@@ -167,7 +187,6 @@ const Dashboard = ({ setSigned }) => {
                     <Options
                       switches={switches}
                       setSwitches={setSwitches}
-                      getArgs={getArgs}
                       moduleName="Gardener"
                     />
                   </div>
@@ -177,7 +196,7 @@ const Dashboard = ({ setSigned }) => {
               <tr className="border-b dark:border-neutral-500">
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500 font-medium text-xl text-left flex flex-row justify-between items-center">
                   <span>Farmor</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className={`relative inline-flex items-center ${switches.isFarmorPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
                     <input
                       type="checkbox"
                       name="Farmor"
@@ -192,17 +211,19 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" name="Farmor" onClick={handleSelectFile} className="cursor-pointer" />
+                    <button onClick={handleSelectFile} disabled={!switches.isFarmorPermission} className={`${switches.isFarmorPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
+                      <img src={iconCSV} width={24} height={24} alt="" name="Farmor" style={file && module === 'Farmor' ? activeIcon : {}} />
+                    </button>
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    <Options
+                    {/* <Options
                       switches={switches}
                       setSwitches={setSwitches}
                       getArgs={getArgs}
                       moduleName="Farmor"
-                    />
+                    /> */}
                   </div>
                 </td>
               </tr>
@@ -210,7 +231,7 @@ const Dashboard = ({ setSigned }) => {
               <tr className="border-b dark:border-neutral-500">
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500 font-medium text-xl text-left flex flex-row justify-between items-center">
                   <span>Purchaser</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className={`relative inline-flex items-center ${switches.isPurchaserPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
                     <input
                       type="checkbox"
                       name="Purchaser"
@@ -225,7 +246,9 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" data-value="Purchaser" onClick={handleSelectFile} className="cursor-pointer" />
+                    <button onClick={handleSelectFile} disabled={!switches.isPurchaserPermission} className={`${switches.isPurchaserPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
+                      <img src={iconCSV} width={24} height={24} alt="" name="Purchaser" style={file && module === 'Purchaser' ? activeIcon : {}} />
+                    </button>
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
@@ -237,7 +260,7 @@ const Dashboard = ({ setSigned }) => {
               <tr className="border-b dark:border-neutral-500">
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500 font-medium text-xl text-left flex flex-row justify-between items-center">
                   <span>Acceptor</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className={`relative inline-flex items-center ${switches.isAcceptorPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
                     <input
                       type="checkbox"
                       name="Acceptor"
@@ -252,7 +275,9 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-center">
-                    <img src={iconCSV} width={24} height={24} alt="" data-value="Acceptor" onClick={handleSelectFile} className="cursor-pointer" />
+                    <button onClick={handleSelectFile} disabled={!switches.isAcceptorPermission} className={`${switches.isAcceptorPermission? 'cursor-pointer': 'cursor-not-allowed'}`}>
+                      <img src={iconCSV} width={24} height={24} alt="" name="Acceptor" style={file && module === 'Acceptor' ? activeIcon : {}} />
+                    </button>
                   </div>
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
@@ -287,7 +312,7 @@ const Dashboard = ({ setSigned }) => {
           </div>
 
           {/* File */}
-          <input type='file' id='file' ref={inputFile} onChange={onChangeFile} className="hidden" />
+          <input type='file' id='file' accept='.csv,text/csv' ref={inputFile} onChange={onChangeFile} className="hidden" />
         </form>
       </div>
 

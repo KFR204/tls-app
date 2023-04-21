@@ -1,5 +1,6 @@
 import { useState, useContext, useCallback, memo } from "react"
 import { SocketContext } from '../context/socket'
+import toast, { Toaster } from 'react-hot-toast'
 
 const Signin = ({
   setSigned
@@ -7,25 +8,28 @@ const Signin = ({
   const socket = useContext(SocketContext)
   const [isPending, setIsPending] = useState(false)
 
-  const handleSubmit = useCallback((event) => {
-    event.preventDefault()
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault()
 
     setIsPending(true)
 
     const data = {
       code: '10',
-      privateKey: event.target.privateKey.value,
+      privateKey: e.target.privateKey.value,
     }
     socket.emit("message", data)
   }, [])
 
   socket.on('message', data => {
     //console.log(data)
+    setIsPending(false)
+
     if (data.code === "12" && JSON.parse(data.message)?.success) {
       setSigned(true)
       localStorage.setItem('isAuthorized', 1)
-    }
-    setIsPending(false)
+    } else {
+      //return toast('Wrong private key')
+    }   
   })
 
   return (
@@ -38,9 +42,10 @@ const Signin = ({
           </p>
           <div className="mb-6 items-center border-b border-grey-500 py-2">
             <input
-              className="appearance-none bg-transparent border-none w-full text-sm text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
-              type="password"
+              className="mask-input appearance-none bg-transparent border-none w-full text-base text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+              type="text"
               name="privateKey"
+              autoComplete="off"
               placeholder="Private Key" />
           </div>
           {
@@ -62,6 +67,14 @@ const Signin = ({
           }
         </form>
       </div>
+
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: 'text-lg bg-orange-600 items-center text-white',
+          duration: 5000,
+        }}
+      />
     </>
   )
 }
