@@ -1,8 +1,7 @@
-import { useEffect, useState, useContext, useRef, memo, useCallback } from "react"
+import { useEffect, useState, useContext, useRef, memo } from "react"
 import { Buffer } from 'buffer'
 import { SocketContext } from '../context/socket'
 import iconCSV from '../assets/csv-file-icon.svg'
-import toast, { Toaster } from 'react-hot-toast'
 import Options from "./Options"
 
 import papa from 'papaparse'
@@ -36,10 +35,16 @@ const activeIcon = {
 
 const Dashboard = ({ setSigned }) => {
   const socket = useContext(SocketContext)
+  const [errorMessage, setErrorMessage] = useState('')
   const [switches, setSwitches] = useState(INITIAL_STATES)
   const [module, setModule] = useState(null)
   const [file, setFile] = useState(null)
   const inputFile = useRef(null)
+
+  const showMessage = (errorMessage, timeout = 5000) => {
+      setErrorMessage(errorMessage)     
+      setTimeout(() => setErrorMessage(''), timeout)
+  }
 
   const walletAddress = '0xceed8bfa1c058a965bc...example...055d10170798669294871a3'
 
@@ -72,7 +77,7 @@ const Dashboard = ({ setSigned }) => {
     let data = { code: '14', message: e.target.name }
 
     if (e.target.checked) {
-      if (!file || e.target.name !== module) return toast('Please select a file')
+      if (!file || e.target.name !== module) return showMessage('Please select a file')
 
       data = {
         code: '13',
@@ -95,7 +100,7 @@ const Dashboard = ({ setSigned }) => {
     e.preventDefault()
 
     if (!switches.status) {
-      return toast('Please connect to the server first')
+      return showMessage('Please connect to the server first')
     }
 
     setFile(null)
@@ -152,11 +157,19 @@ const Dashboard = ({ setSigned }) => {
 
   return (
     <>
-      <div className="m-4 w-full max-w-3xl">
+      <div className="m-4 w-full max-w-3xl relative">
+        <div className="h-4 mb-2 absolute top-2 sm:right-8 right-4">
+          {
+            errorMessage && (
+              <div className="text-red-600 font-semibold text-sm"> {errorMessage} </div>
+            )
+          }
+          </div>
         <form className="bg-white shadow-lg rounded sm:px-8 px-4 pt-6 pb-8">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <h2 className="text-sm mb-4">{walletAddress}</h2>
-          <table className="min-w-full border text-center text-sm font-light dark:border-neutral-500">
+          <h2 className="text-sm">{walletAddress}</h2>
+
+          <table className="min-w-full mt-4 border text-center text-sm font-light dark:border-neutral-500">
             <tbody>
               {/* Gardener  */}
               <tr className="border-b dark:border-neutral-500">
@@ -218,12 +231,6 @@ const Dashboard = ({ setSigned }) => {
                 </td>
                 <td className="whitespace-nowrap border-r px-4 py-2 dark:border-neutral-500">
                   <div className="flex justify-left">
-                    {/* <Options
-                      switches={switches}
-                      setSwitches={setSwitches}
-                      getArgs={getArgs}
-                      moduleName="Farmor"
-                    /> */}
                   </div>
                 </td>
               </tr>
@@ -315,14 +322,6 @@ const Dashboard = ({ setSigned }) => {
           <input type='file' id='file' accept='.csv,text/csv' ref={inputFile} onChange={onChangeFile} className="hidden" />
         </form>
       </div>
-
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          className: 'text-lg bg-orange-600 items-center text-white',
-          duration: 5000,
-        }}
-      />
     </>
   )
 }

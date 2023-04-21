@@ -1,23 +1,46 @@
 import { useState, useContext, useCallback, memo } from "react"
 import { SocketContext } from '../context/socket'
-import toast, { Toaster } from 'react-hot-toast'
+//import {ethers} from 'ethers'
 
 const Signin = ({
   setSigned
 }) => {
   const socket = useContext(SocketContext)
   const [isPending, setIsPending] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const showMessage = (errorMessage, timeout = 5000) => {
+    setErrorMessage(errorMessage)     
+    setTimeout(() => setErrorMessage(''), timeout)
+  }
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault()
 
     setIsPending(true)
 
+    const isValid = (value) => (typeof(value) === "string" && value.match(/^(0x)?[0-9a-f]{64}$/i))
+
+    if(!isValid(e.target.privateKey.value)) {
+      setIsPending(false)
+      return showMessage('Invalid private key')
+    }
+
     const data = {
       code: '10',
       privateKey: e.target.privateKey.value,
     }
+
     socket.emit("message", data)
+
+    // try {
+    //   const w = new ethers.Wallet(e.target.privateKey.value)
+    //   socket.emit("message", data)
+    // }
+    // catch (e) {
+    //   setIsPending(false)
+    //   return toast('Invalid private key')
+    // }
   }, [])
 
   socket.on('message', data => {
@@ -28,19 +51,27 @@ const Signin = ({
       setSigned(true)
       localStorage.setItem('isAuthorized', 1)
     } else {
-      //return toast('Wrong private key')
+      return showMessage('Access denied')
     }   
   })
 
   return (
     <>
-      <div className="m-8 w-full max-w-lg">
+      <div className="m-8 w-full max-w-lg relative">
+        <div className="h-4 mb-2 absolute top-2 sm:right-8 right-4">
+          {
+            errorMessage && (
+              <div className="text-red-600 font-semibold text-sm"> {errorMessage} </div>
+            )
+          }
+        </div>
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4">
           <h5 className="text-xl font-medium text-gray-900 dark:text-white">SignIn</h5>
           <p className="text-sm m-5">
             Please provide your private key to get access for Blur automation system
           </p>
-          <div className="mb-6 items-center border-b border-grey-500 py-2">
+
+          <div className="mb-4 items-center border-b border-grey-500 py-2">
             <input
               className="mask-input appearance-none bg-transparent border-none w-full text-base text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
               type="text"
@@ -67,14 +98,6 @@ const Signin = ({
           }
         </form>
       </div>
-
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          className: 'text-lg bg-orange-600 items-center text-white',
-          duration: 5000,
-        }}
-      />
     </>
   )
 }
