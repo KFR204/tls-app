@@ -7,7 +7,7 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "serve-heroku": "vite --host 0.0.0.0 --port $PORT preview",
+    "serve-heroku": "vite --host 0.0.0.0 --port $PORT preview"
   },
   "dependencies": {
     "@material-tailwind/react": "^1.4.2",
